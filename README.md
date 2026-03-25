@@ -1,3 +1,16 @@
+# microWakeWord-Trainer-Enhanced-Negatives
+
+This repository is a **fork** of the original [microWakeWord-Trainer-Nvidia-Docker](https://github.com) by **TaterTotterson**.
+
+### 🌟 What’s New in this Fork
+The primary goal of this version is to reduce **false positives** by introducing **Custom Negative Training**.
+
+*   **Phonetic "Sounds-Like" Training:** You can now provide a list of phrases that sound similar to your wake word (e.g., "Jarrett" for "Jarvis"). The trainer will treat these as high-priority negative samples.
+*   **Reduced False Triggers:** By specifically training the model on what *not* to trigger on, real-world accuracy is significantly improved in noisy environments or during TV/conversation playback.
+*   **How to use:** Coming soon
+
+---
+
 <div align="center">
   <h1>🎙️ microWakeWord Nvidia Trainer & Recorder</h1>
   <img width="1002" height="593" alt="Screenshot 2026-01-18 at 8 13 35 AM" src="https://github.com/user-attachments/assets/e1411d8a-8638-4df8-992b-09a46c6e5ddc" />
