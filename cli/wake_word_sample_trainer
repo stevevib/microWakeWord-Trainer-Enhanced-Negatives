@@ -232,8 +232,8 @@ fi
 if [ "${HAS_CUSTOM_NEGATIVE}" = "true" ]; then
   custom_block="$(cat <<EOF
 - features_dir: ${CUSTOM_NEGATIVE_ROOT}
-  penalty_weight: 3.0
-  sampling_weight: 8.0
+  penalty_weight: 5.0
+  sampling_weight: 50.0
   truncation_strategy: random
   truth: false
   type: mmap
