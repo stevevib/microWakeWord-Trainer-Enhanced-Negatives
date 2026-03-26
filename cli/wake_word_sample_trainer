@@ -112,7 +112,9 @@ else
 fi
 
 # Our Negative dataset is also optional, but if present MUST have /training 
-CUSTOM_NEGATIVE_DIR="${WORK_DIR}/custom_negative_features"
+#CUSTOM_NEGATIVE_DIR="${WORK_DIR}/custom_negative_features"
+CUSTOM_NEGATIVE_DIR="${WORK_DIR}/custom_negative_features/training"
+
 HAS_CUSTOM_NEGATIVE="false"
 
 if [ -d "${CUSTOM_NEGATIVE_DIR}/training" ] ; then
@@ -145,8 +147,9 @@ features:
   type: mmap
 __PERSONAL_FEATURE_MARKER__
 
-# For our custom negative datasets
+# Start custom negative datasets
 __CUSTOM_NEGATIVE_MARKER__
+# End custom negative datasets
 
 - features_dir: __NEG_SPEECH__
   penalty_weight: 1.0
