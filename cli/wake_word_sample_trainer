@@ -113,15 +113,17 @@ fi
 
 # Our Negative dataset is also optional, but if present MUST have /training 
 #CUSTOM_NEGATIVE_DIR="${WORK_DIR}/custom_negative_features"
-CUSTOM_NEGATIVE_DIR="${WORK_DIR}/custom_negative_features/training"
-
+CUSTOM_NEGATIVE_ROOT="${WORK_DIR}/custom_negative_features"
+CUSTOM_NEGATIVE_DIR="${CUSTOM_NEGATIVE_ROOT}/training"
 HAS_CUSTOM_NEGATIVE="false"
 
-if [ -d "${CUSTOM_NEGATIVE_DIR}/training" ] ; then
+echo "DEBUG: Checking ${CUSTOM_NEGATIVE_DIR}"
+
+if [ -d "${CUSTOM_NEGATIVE_DIR}" ] ; then
   HAS_CUSTOM_NEGATIVE="true"
   echo "✅ Found custom negative dataset: ${CUSTOM_NEGATIVE_DIR}"
 else
-  echo "ℹ️  No custom negative dataset found"
+  echo "❌ No custom negative dataset found at ${CUSTOM_NEGATIVE_DIR}"
 fi
 
 cd "${WORK_DIR}"
@@ -229,7 +231,7 @@ fi
 # Insert/remove custom negative block
 if [ "${HAS_CUSTOM_NEGATIVE}" = "true" ]; then
   custom_block="$(cat <<EOF
-- features_dir: ${CUSTOM_NEGATIVE_DIR}
+- features_dir: ${CUSTOM_NEGATIVE_ROOT}
   penalty_weight: 3.0
   sampling_weight: 8.0
   truncation_strategy: random
