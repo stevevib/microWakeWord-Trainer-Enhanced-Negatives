@@ -122,6 +122,12 @@ echo "DEBUG: Checking ${CUSTOM_NEGATIVE_DIR}"
 if [ -d "${CUSTOM_NEGATIVE_DIR}" ] ; then
   HAS_CUSTOM_NEGATIVE="true"
   echo "✅ Found custom negative dataset: ${CUSTOM_NEGATIVE_DIR}"
+
+  echo "DEBUG: Listing custom negative dataset contents"
+  ls -lah ${CUSTOM_NEGATIVE_DIR}/wakeword_mmap | head -n 20
+
+  echo "DEBUG: Dataset size"
+  du -sh ${CUSTOM_NEGATIVE_DIR}
 else
   echo "❌ No custom negative dataset found at ${CUSTOM_NEGATIVE_DIR}"
 fi
@@ -155,19 +161,28 @@ __CUSTOM_NEGATIVE_MARKER__
 
 - features_dir: __NEG_SPEECH__
   penalty_weight: 1.0
-  sampling_weight: 12.0
+  # --- Original Value ---
+  #sampling_weight: 12.0
+  # --- New Value ---
+  sampling_weight: 4.0
   truncation_strategy: random
   truth: false
   type: mmap
 - features_dir: __NEG_DINNER__
   penalty_weight: 1.0
-  sampling_weight: 12.0
+  # --- Original Value ---
+  #sampling_weight: 12.0
+  # --- New Value ---
+  sampling_weight: 4.0
   truncation_strategy: random
   truth: false
   type: mmap
 - features_dir: __NEG_NOSPEECH__
   penalty_weight: 1.0
-  sampling_weight: 5.0
+  # --- Original Value ---
+  #sampling_weight: 5.0
+  # --- New Value ---
+  sampling_weight: 2.0
   truncation_strategy: random
   truth: false
   type: mmap
@@ -232,8 +247,8 @@ fi
 if [ "${HAS_CUSTOM_NEGATIVE}" = "true" ]; then
   custom_block="$(cat <<EOF
 - features_dir: ${CUSTOM_NEGATIVE_ROOT}
-  penalty_weight: 5.0
-  sampling_weight: 50.0
+  penalty_weight: 3.0
+  sampling_weight: 25.0
   truncation_strategy: random
   truth: false
   type: mmap
