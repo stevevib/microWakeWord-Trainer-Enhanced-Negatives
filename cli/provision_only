@@ -1,0 +1,95 @@
+#!/bin/bash
+set -euo pipefail
+
+PROGPATH="$(realpath "$0")"
+PROGDIR="$(dirname "${PROGPATH}")"
+
+# 1. Setup Directories
+DATA_DIR=${DATA_DIR:-/data}
+mkdir -p "${DATA_DIR}/training_datasets/downloads"
+cd "${DATA_DIR}/training_datasets"
+
+echo -e "\n===== PROVISIONING TRAINING DATASETS: Downloads & Extraction Only =====\n"
+
+# 2. Dataset Map
+declare -a DATASETS=(
+    "NegativeDatasets|https://huggingface.co/datasets/kahrendt/microwakeword/resolve/main/|zip|negative_datasets"
+    "MIT_RIR|https://mcdermottlab.mit.edu/Reverb/IRMAudio/Audio.zip|zip|mit_rirs"
+    "WHAM|https://my-bucket-a8b4b49c25c811ee9a7e8bba05fa24c7.s3.amazonaws.com/wham_noise.zip|zip|wham"
+    "CHiME|https://archive.org/download/chime-home/chime_home.tar.gz|tar|chime"
+    "FMA|https://huggingface.co/datasets/mchl914/fma_xsmall/resolve/main/fma_xs.zip|zip|fma"
+)
+
+get_size_mb() {
+    if command -v bc >/dev/null 2>&1; then
+        local bytes=$(curl -sLI "$1" | grep -i Content-Length | tail -n 1 | awk '{print $2}' | tr -d '\r' || echo "0")
+        if [[ "$bytes" =~ ^[0-9]+$ ]] && [ "$bytes" -gt 0 ]; then
+            echo "scale=1; $bytes / 1048576" | bc
+            return
+        fi
+    fi
+    echo "Unknown"
+}
+
+heartbeat() {
+    local pid=$1
+    local file=$2
+    local seconds=0
+    while kill -0 "$pid" 2>/dev/null; do
+        sleep 15
+        seconds=$((seconds + 15))
+        echo "STATUS:EXTRACTING | FILE:$file | ELAPSED:${seconds}s | STILL_WORKING"
+    done
+    echo "STATUS:EXTRACTION_COMPLETE | FILE:$file"
+}
+
+for entry in "${DATASETS[@]}"; do
+    IFS='|' read -r NAME URL TYPE TARGET <<< "$entry"
+    
+    if [ -d "./$TARGET" ] || [ -d "./${TARGET}_16k" ]; then
+        echo "✅ $NAME already provisioned. Skipping."
+        continue
+    fi
+
+    echo -e "\n--- Provisioning $NAME ---\n"
+
+    if [ "$NAME" == "NegativeDatasets" ]; then
+        for ds in dinner_party dinner_party_eval no_speech speech; do
+            if [ ! -d "./negative_datasets/$ds" ]; then
+                FILE="$ds.zip"
+                FULL_URL="${URL}${FILE}"
+                if [ ! -f "./downloads/$FILE" ]; then
+                    SIZE=$(get_size_mb "$FULL_URL")
+                    echo "STATUS:DOWNLOADING | FILE:$FILE | SIZE:${SIZE}MB"
+                    # WGET DOT PROGRESS: 1 dot = 1MB, very clean for logs
+                    wget --progress=dot:giga -O "./downloads/$FILE" "$FULL_URL" 2>&1 | grep --line-buffered "%" || true
+                fi
+                echo "STATUS:EXTRACTING_START | FILE:$FILE"
+                unzip -q -o "./downloads/$FILE" -d "./negative_datasets" &
+                heartbeat $! "$FILE"
+                wait $!
+            fi
+        done
+    else
+        ARCHIVE=$(basename "$URL")
+        if [ ! -f "./downloads/$ARCHIVE" ]; then
+            SIZE=$(get_size_mb "$URL")
+            echo "STATUS:DOWNLOADING | FILE:$ARCHIVE | SIZE:${SIZE}MB"
+            # WGET DOT PROGRESS: 1 dot = 1MB
+            wget --progress=dot:giga -O "./downloads/$ARCHIVE" "$URL" 2>&1 | grep --line-buffered "%" || true
+        fi
+        
+        echo "STATUS:EXTRACTING_START | FILE:$ARCHIVE"
+        mkdir -p "./$TARGET"
+        if [ "$TYPE" == "zip" ]; then
+            unzip -q -o "./downloads/$ARCHIVE" -d "./$TARGET" &
+        else
+            tar -xzf "./downloads/$ARCHIVE" -C "./$TARGET" &
+        fi
+        heartbeat $! "$ARCHIVE"
+        wait $!
+    fi
+    echo "✅ $NAME Provisioned"
+done
+
+echo -e "\n===== Provisioning Complete. Ready for Training. ====="
